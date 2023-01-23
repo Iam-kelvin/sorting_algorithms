@@ -1,90 +1,89 @@
 #include "sort.h"
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+
 /**
- * merge - merges subarrays to higher array
- * @array: an array of integers
- * @tmp_sort: temporary sorted subarray
- * @low: low end index of array
- * @mid: mid index of array
- * @high: high end index of array
+ * TDMerge - sorts and merges the sub arrays in source
+ * @start: starting index (inclusive) for the left sub array
+ * @middle: end index (exclusive) for the left sub array and
+ * starting index (inclusive) for the right sub array
+ * @end: end index (exclusive) for the right sub array
+ * @dest: destination for data
+ * @source: source of data
+ *
+ * Return: void
  */
-void merge(int *array, int *tmp_sort, size_t low, size_t mid, size_t high)
+void TDMerge(size_t start, size_t middle, size_t end, int *dest, int *source)
 {
-size_t l, m, k, n = high - low;
-l = low;
-m = mid;
-printf("Merging...\n");
-printf("[left]: ");
-print_array((const int *)array + low, mid - low);
-printf("[right]: ");
-print_array((const int *)array + mid, high - mid);
-for (k = 0; k < n; k++)
-{
-if (l < mid && (m >= high || array[l] <= array[m]))
-{
-tmp_sort[k + low] = array[l];
-l++;
-}
-else
-{
-tmp_sort[k + low] = array[m];
-m++;
-}
-}
-printf("[Done]: ");
-print_array((const int *)tmp_sort + low, n);
+	size_t i, j, k;
+
+	printf("Merging...\n");
+	printf("[left]: ");
+	print_array(source + start, middle - start);
+	printf("[right]: ");
+	print_array(source + middle, end - middle);
+	i = start;
+	j = middle;
+	for (k = start; k < end; k++)
+	{
+		if (i < middle && (j >= end || source[i] <= source[j]))
+		{
+			dest[k] = source[i];
+			i++;
+		}
+		else
+		{
+			dest[k] = source[j];
+			j++;
+		}
+	}
+	printf("[Done]: ");
+	print_array(dest + start, end - start);
 }
 
 /**
- * m_split - divides the array into subarrays
- * @tmp_sort: temporary sorted subarray
- * @array: an array of integers
- * @low: low end index of array
- * @high: high end index of array
+ * TDSplitMerge - recursively splits the array and merges the sorted arrays
+ * @start: starting index (inclusive)
+ * @end: end index (exclusive)
+ * @array: the array to sort
+ * @copy: a copy of the array
+ *
+ * Return: void
  */
-void m_split(int *tmp_sort, int *array, size_t low, size_t high)
+void TDSplitMerge(size_t start, size_t end, int *array, int *copy)
 {
-size_t mid;
-if (high - low <= 1)
-return;
-mid = (low + high) / 2;
-m_split(array, tmp_sort, low, mid);
-m_split(array, tmp_sort, mid, high);
-merge(tmp_sort, array, low, mid, high);
+	size_t middle;
+
+	if (end - start < 2)
+		return;
+	middle = (start + end) / 2;
+	TDSplitMerge(start, middle, array, copy);
+	TDSplitMerge(middle, end, array, copy);
+	TDMerge(start, middle, end, array, copy);
+	for (middle = start; middle < end; middle++)
+		copy[middle] = array[middle];
 }
 
 /**
- * copy_to_input - copies sorted array to input array
- * @array: an array of integers
- * @tmp_sort: temporary sorted subarray
- * @size: max index size of array
- */
-void copy_to_input(int *array, int *tmp_sort, size_t size)
-{
-size_t i;
-for (i = 0; i < size; i++)
-array[i] = tmp_sort[i];
-}
-
-/**
- * merge_sort - sorts an array of integers in ascending
- * order using the Merge sort
- * @array: an array of integers
- * @size: max index size of the array
+ * merge_sort - sorts an array of integers in ascending order using the
+ * Merge sort algorithm
+ * @array: array to sort
+ * @size: size of the array
+ *
+ * Return: void
  */
 void merge_sort(int *array, size_t size)
 {
-int *tmp_sort;
+	size_t i;
+	int *copy;
 
-if (array == NULL || size <= 1)
-return;
-
-tmp_sort = malloc(sizeof(array[0]) * size);
-if (!tmp_sort)
-return;
-
-copy_to_input(tmp_sort, array, size);
-m_split(tmp_sort, array, 0, size);
-free(tmp_sort);
+	if (array == NULL || size < 2)
+		return;
+	copy = malloc(sizeof(int) * size);
+	if (copy == NULL)
+		return;
+	for (i = 0; i < size; i++)
+		copy[i] = array[i];
+	TDSplitMerge(0, size, array, copy);
+	free(copy);
 }
